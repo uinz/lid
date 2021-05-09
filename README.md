@@ -94,5 +94,5 @@ app
 
 - use `find-my-way` (Prefix Tree) for router
 - use `fast-json-stringify` for stringify
-- use `@sinclair/type box` generate json-schema
+- use `@sinclair/typebox` generate json-schema
 - use `ajv` for validate
