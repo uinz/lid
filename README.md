@@ -1,6 +1,6 @@
 # Lid
 
-Simple, efficient and type-safe http framework
+Goal: Simple, efficient and type-safe http framework
 
 <img style="text-align:center" src="./logo.png" width="400">
 
