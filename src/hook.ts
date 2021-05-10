@@ -18,7 +18,8 @@ export class Hookable {
     return this;
   }
 
-  protected async runHooks(hooks: (Hook | Hook[])[], req: IncomingMessage, res: ServerResponse) {
+  protected async runHooks(type: "prev" | "post", req: IncomingMessage, res: ServerResponse) {
+    const hooks = type === "prev" ? this._prevHooks : this._postHooks;
     for (const hook of hooks) {
       if (Array.isArray(hook)) {
         await Promise.all(hook.map((f) => f(req, res)));

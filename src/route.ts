@@ -9,14 +9,14 @@ import { Hookable } from "./hook";
 
 type Infer<T> = Prettier<Static<T>>;
 
-const ajv = new Ajv({ useDefaults: true, coerceTypes: true, strict: false });
-
-type Ctx<Method, Params, Query> = Prettier<{
+type Handler<Method, Params, Query, Body> = (ctx: {
   method: Method;
   url: string;
   params: Params;
   query: Query;
-}>;
+}) => Body | Promise<Body>;
+
+const ajv = new Ajv({ useDefaults: true, coerceTypes: true, strict: false });
 
 export type TRoute<
   TMethod extends HTTPMethod,
@@ -39,7 +39,7 @@ export class Route<
     if (!this._handler) {
       throw new Error(`${this.path} no handler`);
     }
-    await this.runHooks(this._prevHooks, req, res);
+    await this.runHooks("prev", req, res);
     const url = req.url as string;
     const method = req.method as TMethod;
     const data = await this._handler({
@@ -50,7 +50,7 @@ export class Route<
     });
 
     this.response(data, req, res);
-    await this.runHooks(this._postHooks, req, res);
+    await this.runHooks("post", req, res);
   }
 
   constructor(readonly method: TMethod, readonly path: TPath) {
@@ -71,9 +71,9 @@ export class Route<
 
   private parseQuery<T extends object>(url: string) {
     let query = {} as T;
-    const index = url.indexOf("?");
-    if (index !== -1) {
-      const str = url.slice(index + 1);
+    const i = url.indexOf("?");
+    if (i !== -1) {
+      const str = url.slice(i + 1);
       query = { ...querystring.parse(str) } as T;
     }
     if (!this._queryValidate(query)) {
@@ -91,18 +91,16 @@ export class Route<
     return this;
   }
 
-  private _handler?: (ctx: Ctx<TMethod, TParams, TQuery>) => TBody | Promise<TBody>;
+  private _handler?: Handler<TMethod, TParams, TQuery, TBody>;
   handle(
-    handler: (ctx: Ctx<TMethod, TParams, TQuery>) => TBody | Promise<TBody>
+    handler: Handler<TMethod, TParams, TQuery, TBody>
   ): TRoute<TMethod, TPath, TParams, TQuery, TBody, TUsed | "handle"> {
     this._handler = handler;
     // @ts-ignore: 类型
     return this;
   }
 
-  private response(data: unknown, req: IncomingMessage, res: ServerResponse) {
-    console.log("accept:", req.headers.accept);
-
+  private response(data: unknown, _req: IncomingMessage, res: ServerResponse) {
     switch (true) {
       case typeof data === "string":
         res.setHeader("Content-Type", "text/plain");

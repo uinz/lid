@@ -47,9 +47,9 @@ export class Lid extends Hookable {
     }
 
     try {
-      await this.runHooks(this._prevHooks, req, res);
+      await this.runHooks("prev", req, res);
       await route.handler(req, res, route.params, route.store);
-      await this.runHooks(this._postHooks, req, res);
+      await this.runHooks("post", req, res);
     } catch (err) {
       this.handleError(err, req, res);
     }
