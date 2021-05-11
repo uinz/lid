@@ -2,11 +2,18 @@ import { Static, TSchema, Type } from "@sinclair/typebox";
 import Ajv from "ajv";
 import fastJSON from "fast-json-stringify";
 import { HTTPMethod } from "find-my-way";
-import querystring from "querystring";
 import { Spatula } from "./spatula";
 import { Params, Prettier } from "./types";
 import { isBuffer, isString } from "./utils";
 import { Wok } from "./wok";
+
+const SPEC: Record<string, TSchema> = {};
+
+export interface MRoute {
+  method: HTTPMethod;
+  path: string;
+  run: Route["run"];
+}
 
 type Infer<T> = Prettier<Static<T>>;
 
@@ -15,6 +22,8 @@ type Handler<Method, Params, Query, Body> = (ctx: {
   url: string;
   params: Params;
   query: Query;
+  status(code: number): typeof ctx;
+  header(key: string, value: string): typeof ctx;
 }) => Body | Promise<Body>;
 
 const ajv = new Ajv({ useDefaults: true, coerceTypes: true, strict: false });
@@ -24,7 +33,7 @@ export type TRoute<
   TPath extends string,
   TParams extends Record<string, unknown> = Params<TPath>,
   TQuery extends Record<string, unknown> = {},
-  TBody = void,
+  TBody = unknown,
   TUsed extends string = never
 > = Omit<Route<TMethod, TPath, TParams, TQuery, TBody, TUsed>, TUsed>;
 
@@ -37,7 +46,7 @@ export class Route<
   TPath extends string = never,
   TParams extends Record<string, unknown> = Params<TPath>,
   TQuery extends Record<string, unknown> = {},
-  TBody = void,
+  TBody = unknown,
   TUsed extends string = never
 > extends Wok {
   constructor(readonly method: TMethod, readonly path: TPath) {
@@ -46,21 +55,27 @@ export class Route<
 
   run(spatula: Spatula, params: TParams) {
     const action = async () => {
-      if (!this.#handler) {
-        throw new Error(`${this.path} no handler`);
-      }
       const { query } = spatula;
       if (!this.#queryValidate(query)) {
         throw new Error(`query: ${ajv.errorsText()}`);
       }
 
       const { url, method } = spatula;
-      const data = await this.#handler({
+      const ctx = {
         params,
         url,
         method: method as TMethod,
         query,
-      });
+        status(code: number) {
+          spatula.status(code);
+          return ctx;
+        },
+        header(key: string, value: string) {
+          spatula.header(key, value);
+          return ctx;
+        },
+      };
+      const data = await this.#handler(ctx);
       this.response(spatula, data);
     };
 
@@ -76,19 +91,6 @@ export class Route<
     return this;
   }
 
-  private parseQuery<T extends object>(url: string) {
-    let query = {} as T;
-    const i = url.indexOf("?");
-    if (i !== -1) {
-      const str = url.slice(i + 1);
-      query = { ...querystring.parse(str) } as T;
-    }
-    if (!this.#queryValidate(query)) {
-      throw new Error(`query wrong: ${ajv.errorsText()}`);
-    }
-    return query;
-  }
-
   #bodyStringify = JSON.stringify;
   body<S extends TSchema>(
     schema: S
@@ -98,7 +100,7 @@ export class Route<
     return this;
   }
 
-  #handler?: Handler<TMethod, TParams, TQuery, TBody>;
+  #handler: Handler<TMethod, TParams, TQuery, TBody> = DEFAULT_HANDLER;
   handle(
     handler: Handler<TMethod, TParams, TQuery, TBody>
   ): TRoute<TMethod, TPath, TParams, TQuery, TBody, TUsed | "handle"> {
@@ -126,4 +128,16 @@ export class Route<
   }
 }
 
+export function openAPI(path: string): MRoute {
+  return route("GET", path).handle(() => SPEC);
+}
+
 export const t = Type;
+
+const DEFAULT_HANDLER: Handler<any, any, any, any> = (ctx) => {
+  ctx.status(404);
+  return {
+    status: 404,
+    message: `${ctx.url} not implement.`,
+  };
+};

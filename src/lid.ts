@@ -1,14 +1,8 @@
-import findMyWay, { HTTPMethod } from "find-my-way";
+import findMyWay from "find-my-way";
 import { createServer } from "http";
-import { Route } from "./route";
+import { MRoute } from "./route";
 import { Spatula } from "./spatula";
 import { Wok } from "./wok";
-
-interface MinRoute {
-  method: HTTPMethod;
-  path: string;
-  run: Route["run"];
-}
 
 export class Lid extends Wok {
   readonly #server = createServer((req, res) => {
@@ -31,7 +25,7 @@ export class Lid extends Wok {
     });
   }
 
-  mount(route: MinRoute | Record<string, MinRoute>) {
+  mount(route: MRoute | Record<string, MRoute>) {
     if (isRoute(route)) {
       this.#router.on(
         route.method,
@@ -70,7 +64,7 @@ export function lid() {
   return new Lid();
 }
 
-function isRoute(v: unknown): v is MinRoute {
+function isRoute(v: unknown): v is MRoute {
   // @ts-ignore
   return typeof v.run === "function";
 }
