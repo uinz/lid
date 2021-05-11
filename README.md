@@ -1,14 +1,16 @@
 # Lid
 
-Goal: Simple, efficient and type-safe http framework
+**Goal:** Simple, efficient and type-safe http framework
 
-<img style="text-align:center" src="./logo.png" width="400">
+<img style="text-align:center" src="./logo.png" width="240">
 
 ---
 
 # Example
 
 ```ts
+import { lid, route, t } from "TODO";
+
 const app = lid();
 
 const $query = t.Object({
@@ -29,59 +31,33 @@ const $body = t.Object({
 const routeA = route("GET", "/user/:id")
   .query($query)
   .body($body)
+  .use((_spatula, next) => {
+    console.log("3");
+    next();
+  })
+  .use((_spatula, next) => {
+    next();
+    console.log("4");
+  })
   .handle((ctx) => {
-    // (method) handle(handler: (ctx: {
-    //     method: "GET";
-    //     url: string;
-    //     params: {
-    //         id: string;
-    //     };
-    //     query: {
-    //         size: number;
-    //         page: number;
-    //     };
-    // }) => {
-    //     page: number;
-    //     list: {
-    //         name: string;
-    //         age: number;
-    //     }[];
-    // } | Promise<{
-    //     page: number;
-    //     list: {
-    //         name: string;
-    //         age: number;
-    //     }[];
-    // }>): TRoute<...>
-
+    console.log(ctx.params);
     return {
       list: [{ name: "yinz", age: 13 }],
       page: 1,
     };
   });
 
-routeA.addHook("prev", () => {
-  console.log("3");
-});
-
-routeA.addHook("post", () => {
-  console.log("4");
-});
-
-const routeB = route("GET", "/")
-  .body(t.Object({ hello: t.String() }))
-  .handle(() => {
-    return {
-      hello: "world",
-    };
-  });
-
 app
-  .addHook("prev", () => console.log("1"))
-  .addHook("post", () => console.log("2"))
+  .use((_spatula, next) => {
+    console.log("1");
+    next();
+  })
+  .use((_spatula, next) => {
+    next();
+    console.log("2");
+  })
   .mount(routeA)
-  .mount(routeB)
-  .start(3000)
+  .boiling(3000)
   .then(() => console.log("Lid start"));
 
 // curl http://localhost:3000/user/123?size=10&page=1
@@ -90,9 +66,89 @@ app
 
 # Reference content
 
-> fastify
+## fastify
 
 - use `find-my-way` (Prefix Tree) for router
 - use `fast-json-stringify` for stringify
 - use `@sinclair/typebox` generate json-schema
 - use `ajv` for validate
+
+## Koa
+
+- onion model
+
+# Benchmark
+
+[code here](./src/benchmark)
+
+```
+macOS Big Sur
+MacBook Pro (16-inch, 2019)
+2.6 GHz 6-Core Intel Core i7
+16 GB 2667 MHz DDR4
+
+NodeJS: v14.15.4
+
+Running 30s test @ http://localhost:3000/user/123?size=10&page=10
+  12 threads and 400 connections
+```
+
+| framework | version | latency(avg) | latency(max) | req/sec(avg) | req/sec(max) |
+| --------- | ------- | ------------ | ------------ | ------------ | ------------ |
+| lid       | 1.0     | 100.52ms     | 444.20ms     | 354.20       | 676.00       |
+| fastify   | 3.x     | 193.78ms     | 635.76ms     | 290.56       | 680.00       |
+| express   | 4.0     | 202.19ms     | 662.23ms     | 178.85       | 333.00       |
+
+<details>
+<summary>DETAIL</summary>
+
+lid
+
+```
+Running 30s test @ http://localhost:3000/user/123?size=10&page=10
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   100.52ms   53.98ms 444.20ms   91.73%
+    Req/Sec   354.20    120.43   676.00     68.13%
+  123112 requests in 30.11s, 23.36MB read
+  Socket errors: connect 0, read 686, write 0, timeout 0
+Requests/sec:   4089.36
+Transfer/sec:    794.71KB
+```
+
+fastify
+
+```
+Running 30s test @ http://localhost:3002/user/123?size=10&page=10
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   193.78ms  160.51ms 635.76ms   78.30%
+    Req/Sec   290.56    190.96   680.00     54.32%
+  69357 requests in 30.08s, 14.15MB read
+  Socket errors: connect 0, read 574, write 3, timeout 0
+Requests/sec:   2305.56
+Transfer/sec:    481.83KB
+```
+
+express
+
+```
+Running 30s test @ http://localhost:3001/user/123?size=10&page=10
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   202.19ms   86.54ms 662.23ms   82.66%
+    Req/Sec   178.85     81.13   333.00     62.46%
+  59537 requests in 30.09s, 15.84MB read
+  Socket errors: connect 0, read 580, write 0, timeout 0
+Requests/sec:   1978.71
+Transfer/sec:    539.12KB
+```
+
+</details>
+
+
+
+## TODO
+
+- [ ] testing
+- [ ] OpenAPI

@@ -1,4 +1,4 @@
-import { lid, route, t } from "./";
+import { lid, route, t } from "..";
 
 const app = lid();
 
@@ -20,6 +20,14 @@ const $body = t.Object({
 const routeA = route("GET", "/user/:id")
   .query($query)
   .body($body)
+  .use((_spatula, next) => {
+    console.log("3");
+    next();
+  })
+  .use((_spatula, next) => {
+    next();
+    console.log("4");
+  })
   .handle((ctx) => {
     console.log(ctx.params);
     return {
@@ -28,26 +36,15 @@ const routeA = route("GET", "/user/:id")
     };
   });
 
-routeA.addHook("prev", () => {
-  console.log("3");
-});
-
-routeA.addHook("post", () => {
-  console.log("4");
-});
-
-const routeB = route("GET", "/")
-  .body(t.Object({ hello: t.String() }))
-  .handle(() => {
-    return {
-      hello: "world",
-    };
-  });
-
 app
-  .addHook("prev", () => console.log("1"))
-  .addHook("post", () => console.log("2"))
+  .use((_spatula, next) => {
+    console.log("1");
+    next();
+  })
+  .use((_spatula, next) => {
+    next();
+    console.log("2");
+  })
   .mount(routeA)
-  .mount(routeB)
-  .start(3000)
+  .boiling(3000)
   .then(() => console.log("Lid start"));

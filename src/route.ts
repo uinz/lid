@@ -2,10 +2,11 @@ import { Static, TSchema, Type } from "@sinclair/typebox";
 import Ajv from "ajv";
 import fastJSON from "fast-json-stringify";
 import { HTTPMethod } from "find-my-way";
-import { IncomingMessage, ServerResponse } from "http";
 import querystring from "querystring";
+import { Spatula } from "./spatula";
 import { Params, Prettier } from "./types";
-import { Hookable } from "./hook";
+import { isBuffer, isString } from "./utils";
+import { Wok } from "./wok";
 
 type Infer<T> = Prettier<Static<T>>;
 
@@ -27,6 +28,10 @@ export type TRoute<
   TUsed extends string = never
 > = Omit<Route<TMethod, TPath, TParams, TQuery, TBody, TUsed>, TUsed>;
 
+export function route<Method extends HTTPMethod, Path extends string>(method: Method, path: Path) {
+  return new Route(method, path);
+}
+
 export class Route<
   TMethod extends HTTPMethod = never,
   TPath extends string = never,
@@ -34,37 +39,39 @@ export class Route<
   TQuery extends Record<string, unknown> = {},
   TBody = void,
   TUsed extends string = never
-> extends Hookable {
-  async run(req: IncomingMessage, res: ServerResponse, params: TParams) {
-    if (!this._handler) {
-      throw new Error(`${this.path} no handler`);
-    }
-    await this.runHooks("prev", req, res);
-    const url = req.url as string;
-    const method = req.method as TMethod;
-    const data = await this._handler({
-      params,
-      url,
-      method,
-      query: this.parseQuery<TQuery>(url),
-    });
-
-    this.response(data, req, res);
-    await this.runHooks("post", req, res);
-  }
-
+> extends Wok {
   constructor(readonly method: TMethod, readonly path: TPath) {
     super();
   }
 
-  private _queryValidate = (_query: unknown) => true;
+  run(spatula: Spatula, params: TParams) {
+    const action = async () => {
+      if (!this.#handler) {
+        throw new Error(`${this.path} no handler`);
+      }
+      const { query } = spatula;
+      if (!this.#queryValidate(query)) {
+        throw new Error(`query: ${ajv.errorsText()}`);
+      }
+
+      const { url, method } = spatula;
+      const data = await this.#handler({
+        params,
+        url,
+        method: method as TMethod,
+        query,
+      });
+      this.response(spatula, data);
+    };
+
+    return this.spoon(spatula, action);
+  }
+
+  #queryValidate = (query: unknown): query is TQuery => true;
   query<S extends TSchema>(
     schema: S
   ): TRoute<TMethod, TPath, TParams, Infer<S>, TBody, TUsed | "query"> {
-    this._queryValidate = (query) => {
-      return ajv.validate(schema, query);
-    };
-
+    this.#queryValidate = (query): query is TQuery => ajv.validate(schema, query);
     // @ts-ignore
     return this;
   }
@@ -76,67 +83,47 @@ export class Route<
       const str = url.slice(i + 1);
       query = { ...querystring.parse(str) } as T;
     }
-    if (!this._queryValidate(query)) {
+    if (!this.#queryValidate(query)) {
       throw new Error(`query wrong: ${ajv.errorsText()}`);
     }
     return query;
   }
 
-  private _bodyStringify = JSON.stringify;
+  #bodyStringify = JSON.stringify;
   body<S extends TSchema>(
     schema: S
   ): TRoute<TMethod, TPath, TParams, TQuery, Infer<S>, TUsed | "body"> {
-    this._bodyStringify = fastJSON(schema);
+    this.#bodyStringify = fastJSON(schema);
     // @ts-ignore: 类型
     return this;
   }
 
-  private _handler?: Handler<TMethod, TParams, TQuery, TBody>;
+  #handler?: Handler<TMethod, TParams, TQuery, TBody>;
   handle(
     handler: Handler<TMethod, TParams, TQuery, TBody>
   ): TRoute<TMethod, TPath, TParams, TQuery, TBody, TUsed | "handle"> {
-    this._handler = handler;
+    this.#handler = handler;
     // @ts-ignore: 类型
     return this;
   }
 
-  private response(data: unknown, _req: IncomingMessage, res: ServerResponse) {
-    switch (true) {
-      case typeof data === "string":
-        res.setHeader("Content-Type", "text/plain");
-        res.end(data);
-        break;
-      case data instanceof Buffer:
-        res.end(data);
-        break;
-      default:
-        res.setHeader("Content-Type", "application/json");
-        res.end(this._bodyStringify(data));
+  private response(spatula: Spatula, data: unknown) {
+    if (isString(data)) {
+      spatula
+        .header("Content-Type", "text/plain") // plain
+        .response(data);
+      return;
     }
+
+    if (isBuffer(data)) {
+      spatula.response(data);
+      return;
+    }
+
+    spatula
+      .header("Content-Type", "application/json") // header
+      .response(this.#bodyStringify(data));
   }
 }
 
 export const t = Type;
-
-export const route = <Method extends HTTPMethod, Path extends string>(
-  method: Method,
-  path: Path
-) => {
-  return new Route(method, path);
-};
-
-// example
-if (0) {
-  function is<T>(_: T) {}
-  route("GET", "/example/at/:hour(^\\d{2})h:minute(^\\d{2})m")
-    .query(Type.Object({ limit: Type.Number({ default: 10 }) }))
-    .body(Type.Object({ age: Type.Number(), name: Type.String() }))
-    .handle((ctx) => {
-      is<string>(ctx.params.hour);
-      is<number>(ctx.query.limit);
-      return {
-        name: "xxx",
-        age: 1,
-      };
-    });
-}

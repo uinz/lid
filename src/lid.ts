@@ -1,18 +1,22 @@
 import findMyWay, { HTTPMethod } from "find-my-way";
-import { createServer, IncomingMessage, ServerResponse } from "http";
-import { Hookable } from "./hook";
-import { Fn } from "./types";
+import { createServer } from "http";
+import { Route } from "./route";
+import { Spatula } from "./spatula";
+import { Wok } from "./wok";
 
 interface MinRoute {
   method: HTTPMethod;
   path: string;
-  run: Fn;
+  run: Route["run"];
 }
 
-export class Lid extends Hookable {
-  private readonly server = createServer(this.listener.bind(this));
+export class Lid extends Wok {
+  readonly #server = createServer((req, res) => {
+    const spatula = new Spatula(req, res);
+    this.stir(spatula);
+  });
 
-  private readonly router = findMyWay({
+  readonly #router = findMyWay({
     ignoreTrailingSlash: true,
     caseSensitive: false,
     defaultRoute(req, res) {
@@ -21,52 +25,52 @@ export class Lid extends Hookable {
     },
   });
 
-  start(port: number) {
+  boiling(port: number) {
     return new Promise<void>((resolve) => {
-      this.server.listen(port, resolve);
+      this.#server.listen(port, resolve);
     });
   }
 
   mount(route: MinRoute | Record<string, MinRoute>) {
-    if (isMinRoute(route)) {
-      this.router.on(route.method, route.path, route.run.bind(route));
+    if (isRoute(route)) {
+      this.#router.on(
+        route.method,
+        route.path,
+        // do not use arrow function
+        function (this: { spatula: Spatula }, _req, _res, params) {
+          route.run(this.spatula, params);
+        }
+      );
     } else {
       Object.values(route).forEach(this.mount, this);
     }
     return this;
   }
 
-  private async listener(req: IncomingMessage, res: ServerResponse) {
-    const { url, method } = req as { method: HTTPMethod; url: string };
-    const path = url.slice(0, url.indexOf("?"));
-    const route = this.router.find(method, path);
-
-    if (!route) {
-      this.handleError(new Error("500"), req, res);
-      return;
-    }
-
+  private async stir(spatula: Spatula) {
     try {
-      await this.runHooks("prev", req, res);
-      await route.handler(req, res, route.params, route.store);
-      await this.runHooks("post", req, res);
+      // depend on #loop will return handle result(Promise)
+      const route = () => this.#router.lookup(spatula.req, spatula.res, { spatula });
+      await this.spoon(spatula, route);
     } catch (err) {
-      this.handleError(err, req, res);
+      this.handleError(spatula, err);
     }
   }
 
-  private handleError(err: Error, req: IncomingMessage, res: ServerResponse) {
+  private handleError(spatula: Spatula, err: Error) {
     console.log("Error", err);
-    res.statusCode = 500;
-    res.end(`<h1>500</h1></p>${req.url}</p></p>${err.message}</p><pre>${err.stack}</pre>`);
+    spatula
+      .status(500)
+      .response(`<h1>500</h1></p>${spatula.url}</p></p>${err.message}</p><pre>${err.stack}</pre>`);
   }
 }
 
+/** crate lib instance */
 export function lid() {
   return new Lid();
 }
 
-function isMinRoute(v: unknown): v is MinRoute {
+function isRoute(v: unknown): v is MinRoute {
   // @ts-ignore
   return typeof v.run === "function";
 }

@@ -1,4 +1,5 @@
-import { isRegExp, isString } from "../utils";
+import { isRegExp, isString } from "../../utils";
+import { Middleware } from "../../wok";
 import vary from "vary";
 import { IncomingMessage, ServerResponse } from "http";
 
@@ -58,7 +59,7 @@ function configureOrigin(options: Options, req: IncomingMessage): Header[] {
         value: options.origin,
       });
       headers.push({
-        key: 'Vary',
+        key: "Vary",
         value: "Origin",
       });
     }
@@ -158,12 +159,23 @@ function applyHeaders(headers: Header[], res: ServerResponse) {
   });
 }
 
-export function cors(options: Partial<Options>) {
-  return (req: IncomingMessage, res: ServerResponse) => {
+/**
+ * lid CORS middleware
+ * ```
+ * // example
+ * const app = lid();
+ * app.use(cors());
+ * app.use(spatula => {
+ *   spatula.response("CORS enabled");
+ * });
+ * ```
+ */
+export function cors(options: Partial<Options>): Middleware {
+  return (spatula, next) => {
     const corsOptions = { ...defaults, ...options };
-    const method = req.method?.toUpperCase();
-
+    const { method, req, res } = spatula;
     const headers: Header[] = [];
+
     const append = (header?: Header | Header[]) => {
       if (Array.isArray(header)) {
         header.forEach(append);
@@ -181,15 +193,17 @@ export function cors(options: Partial<Options>) {
       append(configureMaxAge(corsOptions));
       append(configureExposedHeaders(corsOptions));
       applyHeaders(headers, res);
-      res.statusCode = corsOptions.optionsSuccessStatus;
-      res.setHeader("Content-Length", "0");
-      res.end();
+      spatula
+        .status(corsOptions.optionsSuccessStatus) // status
+        .header("Content-Length", "0") // safari
+        .response();
     } else {
       // actual response
       append(configureOrigin(corsOptions, req));
       append(configureCredentials(corsOptions));
       append(configureExposedHeaders(corsOptions));
       applyHeaders(headers, res);
+      next();
     }
   };
 }
