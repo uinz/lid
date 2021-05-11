@@ -64,6 +64,8 @@ app
 // 1 3 4 2
 ```
 
+<img src="https://user-images.githubusercontent.com/12208108/117817207-f2e89000-b299-11eb-86db-96295e019ecd.png" width="500">
+
 # Reference content
 
 ## fastify
@@ -93,11 +95,11 @@ Running 30s test @ http://localhost:3000/user/123?size=10&page=10
   12 threads and 400 connections
 ```
 
-| framework | version | latency(avg) | latency(max) | req/sec(avg) | req/sec(max) |
-| --------- | ------- | ------------ | ------------ | ------------ | ------------ |
-| lid       | 1.0     | 100.52ms     | 444.20ms     | 354.20       | 676.00       |
-| fastify   | 3.x     | 193.78ms     | 635.76ms     | 290.56       | 680.00       |
-| express   | 4.0     | 202.19ms     | 662.23ms     | 178.85       | 333.00       |
+| framework | version | latency(avg, max)  | req/sec(avg, max) | Requests/sec | Transfer/sec |
+| --------- | ------- | ------------------ | ----------------- | ------------ | ------------ |
+| lid       | dev     | 100.52ms, 444.20ms | 354.20, 676.00    | 4089.36      | 794.71KB     |
+| fastify   | 3.15.1  | 193.78ms, 635.76ms | 290.56, 680.00    | 1978.71      | 539.12KB     |
+| express   | 4.17.1  | 202.19ms, 662.23ms | 178.85, 333.00    | 1978.71      | 539.12KB     |
 
 <details>
 <summary>DETAIL</summary>
@@ -145,8 +147,6 @@ Transfer/sec:    539.12KB
 ```
 
 </details>
-
-
 
 ## TODO
 
