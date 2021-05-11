@@ -15,7 +15,7 @@ export class Wok {
     return this;
   }
 
-  async spoon(spatula: Spatula, _next: Next) {
+  async spoon(spatula: Spatula, crust: Next) {
     let i = 0;
     const pop = () => this.#mids[i++];
     const next = async () => {
@@ -23,7 +23,7 @@ export class Wok {
       if (middle) {
         await middle(spatula, next);
       } else {
-        await _next();
+        await crust();
       }
     };
     return next();
