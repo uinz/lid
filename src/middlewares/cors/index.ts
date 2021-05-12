@@ -196,7 +196,7 @@ export function cors(options: Partial<Options>): Middleware {
       spatula
         .status(corsOptions.optionsSuccessStatus) // status
         .header("Content-Length", "0") // safari
-        .response();
+        .send();
     } else {
       // actual response
       append(configureOrigin(corsOptions, req));
