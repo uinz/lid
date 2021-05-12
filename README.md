@@ -14,8 +14,8 @@ import { lid, route, t } from "TODO";
 const app = lid();
 
 const $query = t.Object({
-  size: t.Number({ minimum: 0 }),
-  page: t.Number({ minimum: 10, maximum: 100 }),
+  size: t.Number({ minimum: 10 }),
+  page: t.Number({ minimum: 1, maximum: 100 }),
 });
 
 const $user = t.Object({
