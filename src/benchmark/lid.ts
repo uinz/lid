@@ -12,14 +12,14 @@ const $user = t.Object({
   age: t.Number(),
 });
 
-const $body = t.Object({
+const $response = t.Object({
   page: t.Number(),
   list: t.Array($user),
 });
 
 const routeA = route("GET", "/user/:id")
   .query($query)
-  .body($body)
+  .response($response)
   .use((_spatula, next) => {
     console.log("3");
     next();

@@ -2,11 +2,13 @@ import qs from "querystring";
 import { HTTPMethod } from "find-my-way";
 import { IncomingMessage, ServerResponse } from "http";
 
-export class Spatula {
+export class Spatula<Method extends HTTPMethod = HTTPMethod> {
   readonly url: string;
   readonly path: string;
   readonly query: object;
-  readonly method: HTTPMethod;
+  readonly method: Method;
+
+  body?: unknown;
 
   constructor(readonly req: IncomingMessage, readonly res: ServerResponse) {
     const url = req.url ?? "";
@@ -16,7 +18,7 @@ export class Spatula {
     this.url = url;
     this.path = url.slice(0, i);
     this.query = { ...qs.parse(queryStr) };
-    this.method = req.method?.toUpperCase() as HTTPMethod;
+    this.method = req.method?.toUpperCase() as Method;
   }
 
   status(code?: number) {
@@ -33,7 +35,7 @@ export class Spatula {
     return this;
   }
 
-  response(data?: string | Buffer) {
+  send(data?: string | Buffer) {
     this.res.end(data);
     return this;
   }

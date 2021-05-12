@@ -14,8 +14,8 @@ import { lid, route, t } from "TODO";
 const app = lid();
 
 const $query = t.Object({
-  size: t.Number({ minimum: 10 }),
-  page: t.Number({ minimum: 1, maximum: 100 }),
+  size: t.Number({ minimum: 10, maximum: 100 }),
+  page: t.Number({ minimum: 1 }),
 });
 
 const $user = t.Object({
@@ -41,6 +41,7 @@ const routeA = route("GET", "/user/:id")
   })
   .handle((ctx) => {
     console.log(ctx.params);
+    console.log(ctx.body);
     return {
       list: [{ name: "yinz", age: 13 }],
       page: 1,

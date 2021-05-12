@@ -7,24 +7,29 @@ import { Params, Prettier } from "./types";
 import { isBuffer, isString } from "./utils";
 import { Wok } from "./wok";
 
-const SPEC: Record<string, TSchema> = {};
+type Infer<T> = Prettier<Static<T>>;
 
-export interface MRoute {
+export const t = Type;
+
+export interface IRoute {
   method: HTTPMethod;
   path: string;
   run: Route["run"];
 }
 
-type Infer<T> = Prettier<Static<T>>;
-
-type Handler<Method, Params, Query, Body> = (ctx: {
+export type Ctx<Method, Params, Query, Body> = {
   method: Method;
   url: string;
   params: Params;
   query: Query;
-  status(code: number): typeof ctx;
-  header(key: string, value: string): typeof ctx;
-}) => Body | Promise<Body>;
+  body: Body;
+  status(code: number): Ctx<Method, Params, Query, Body>;
+  header(key: string, value: string): Ctx<Method, Params, Query, Body>;
+};
+
+export type Handler<Method, Params, Query, Body, Return> = (
+  ctx: Ctx<Method, Params, Query, Body>
+) => Return | Promise<Return>;
 
 const ajv = new Ajv({ useDefaults: true, coerceTypes: true, strict: false });
 
@@ -34,38 +39,45 @@ export type TRoute<
   TParams extends Record<string, unknown> = Params<TPath>,
   TQuery extends Record<string, unknown> = {},
   TBody = unknown,
+  TResponse = unknown,
   TUsed extends string = never
-> = Omit<Route<TMethod, TPath, TParams, TQuery, TBody, TUsed>, TUsed>;
+> = Omit<Route<TMethod, TPath, TParams, TQuery, TBody, TResponse, TUsed>, TUsed>;
 
 export function route<Method extends HTTPMethod, Path extends string>(method: Method, path: Path) {
   return new Route(method, path);
 }
 
 export class Route<
-  TMethod extends HTTPMethod = never,
+  TMethod extends HTTPMethod = HTTPMethod,
   TPath extends string = never,
-  TParams extends Record<string, unknown> = Params<TPath>,
+  TParams extends Record<string, unknown> = Prettier<Params<TPath>>,
   TQuery extends Record<string, unknown> = {},
   TBody = unknown,
+  TResponse = unknown,
   TUsed extends string = never
 > extends Wok {
   constructor(readonly method: TMethod, readonly path: TPath) {
     super();
   }
 
-  run(spatula: Spatula, params: TParams) {
+  run(spatula: Spatula<TMethod>, params: TParams) {
     const action = async () => {
-      const { query } = spatula;
+      const { url, method, query, body } = spatula;
+
       if (!this.#queryValidate(query)) {
         throw new Error(`query: ${ajv.errorsText()}`);
       }
 
-      const { url, method } = spatula;
-      const ctx = {
+      if (!this.#bodyValidate(body)) {
+        throw new Error(`query: ${ajv.errorsText()}`);
+      }
+
+      const ctx: Ctx<TMethod, TParams, TQuery, TBody> = {
         params,
         url,
-        method: method as TMethod,
+        method,
         query,
+        body,
         status(code: number) {
           spatula.status(code);
           return ctx;
@@ -76,65 +88,70 @@ export class Route<
         },
       };
       const data = await this.#handler(ctx);
-      this.response(spatula, data);
+      this.send(spatula, data);
     };
 
     return this.spoon(spatula, action);
   }
 
-  #queryValidate = (query: unknown): query is TQuery => true;
+  #queryValidate = (_: unknown): _ is TQuery => true;
   query<S extends TSchema>(
     schema: S
-  ): TRoute<TMethod, TPath, TParams, Infer<S>, TBody, TUsed | "query"> {
+  ): TRoute<TMethod, TPath, TParams, Infer<S>, TBody, TResponse, TUsed | "query"> {
     this.#queryValidate = (query): query is TQuery => ajv.validate(schema, query);
     // @ts-ignore
     return this;
   }
 
-  #bodyStringify = JSON.stringify;
+  #bodyValidate = (_: unknown): _ is TBody => true;
   body<S extends TSchema>(
     schema: S
-  ): TRoute<TMethod, TPath, TParams, TQuery, Infer<S>, TUsed | "body"> {
-    this.#bodyStringify = fastJSON(schema);
+  ): TRoute<TMethod, TPath, TParams, TQuery, Infer<S>, TResponse, TUsed | "body"> {
+    this.#bodyValidate = (body): body is TBody => {
+      return ajv.validate(schema, body);
+    };
+    // @ts-ignore
+    return this;
+  }
+
+  #responseStringify = JSON.stringify;
+  response<S extends TSchema>(
+    schema: S
+  ): TRoute<TMethod, TPath, TParams, TQuery, TBody, Infer<S>, TUsed | "response"> {
+    this.#responseStringify = fastJSON(schema);
     // @ts-ignore: 类型
     return this;
   }
 
-  #handler: Handler<TMethod, TParams, TQuery, TBody> = DEFAULT_HANDLER;
+  #handler: Handler<TMethod, TParams, TQuery, TBody, TResponse> = DEFAULT_HANDLER;
   handle(
-    handler: Handler<TMethod, TParams, TQuery, TBody>
-  ): TRoute<TMethod, TPath, TParams, TQuery, TBody, TUsed | "handle"> {
+    handler: Handler<TMethod, TParams, TQuery, TBody, TResponse>
+  ): TRoute<TMethod, TPath, TParams, TQuery, TBody, TResponse, TUsed | "handle"> {
     this.#handler = handler;
     // @ts-ignore: 类型
     return this;
   }
 
-  private response(spatula: Spatula, data: unknown) {
+  private send(spatula: Spatula, data: unknown) {
     if (isString(data)) {
       spatula
         .header("Content-Type", "text/plain") // plain
-        .response(data);
+        .send(data);
       return;
     }
 
     if (isBuffer(data)) {
-      spatula.response(data);
+      spatula.send(data);
       return;
     }
 
     spatula
-      .header("Content-Type", "application/json") // header
-      .response(this.#bodyStringify(data));
+      .header("Content-Type", "application/json") // json header
+      .send(this.#responseStringify(data));
   }
 }
 
-export function openAPI(path: string): MRoute {
-  return route("GET", path).handle(() => SPEC);
-}
-
-export const t = Type;
-
-const DEFAULT_HANDLER: Handler<any, any, any, any> = (ctx) => {
+const DEFAULT_HANDLER: Handler<any, any, any, any, any> = (ctx) => {
   ctx.status(404);
   return {
     status: 404,
