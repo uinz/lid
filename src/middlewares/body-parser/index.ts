@@ -6,7 +6,7 @@ interface Options {
   // TODO
 }
 
-export function parseBody(options: Options): Middleware {
+export function parseBody(options?: Options): Middleware {
   return async (spatula, next) => {
     const contentType = spatula.req.headers["content-type"] ?? "text/plain";
     const content = await getContent(spatula.req);
