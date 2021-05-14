@@ -13,7 +13,7 @@ export function parseBody(): Middleware {
       spatula.body = content;
     }
 
-    await next();
+    return next();
   };
 }
 

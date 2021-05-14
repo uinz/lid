@@ -1,8 +1,8 @@
 import { Spatula } from "./spatula";
 import { isArray } from "./utils";
 
-export type Next = () => Promise<void> | void;
-export type Middleware = (spatula: Spatula, next: Next) => Promise<void> | void;
+export type Next = () => Promise<void>;
+export type Middleware = (spatula: Spatula, next: Next) => Promise<void>;
 
 export class Wok {
   #mids: Middleware[] = [];
@@ -25,7 +25,7 @@ function compose(middles: Middleware[]): Middleware {
   let index = -1;
 
   return (spatula, next) => {
-    const dispatch = (i: number): Promise<void> | void => {
+    const dispatch = (i: number): Promise<void> => {
       if (i <= index) {
         throw new Error("next() called multi times");
       }
@@ -36,7 +36,6 @@ function compose(middles: Middleware[]): Middleware {
       const mid = middles[index]!;
       return mid(spatula, () => dispatch(index + 1));
     };
-
     return dispatch(0);
   };
 }

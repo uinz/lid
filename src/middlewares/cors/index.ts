@@ -75,8 +75,7 @@ export function cors(options: Partial<Options>): Middleware {
     configureExposedHeaders(spatula, opt);
 
     if (spatula.method !== "OPTIONS") {
-      next();
-      return;
+      return next();
     }
 
     // preflight

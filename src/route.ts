@@ -75,8 +75,8 @@ export class Route<
     }
   }
 
-  async handleRequest(spatula: Spatula) {
-    await this.stack()(spatula, async () => {
+  handleRequest(spatula: Spatula) {
+    return this.stack()(spatula, async () => {
       this.assets(spatula);
       const result = await this.#handler(spatula);
       this.end(spatula, this.#responseStringify(result));
@@ -138,10 +138,10 @@ export class Route<
   }
 }
 
-const DEFAULT_HANDLER: Handler<any, any, any, any, any> = (ctx) => {
-  ctx.status(404);
+const DEFAULT_HANDLER: Handler<any, any, any, any, any> = (spatula) => {
+  spatula.status(404);
   return {
     status: 404,
-    message: `${ctx.url} not implement.`,
+    message: `${spatula.url} not implement.`,
   };
 };

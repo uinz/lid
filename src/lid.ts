@@ -47,17 +47,15 @@ export class Lid extends Wok {
     return this;
   }
 
-  async handleRequest(req: IncomingMessage, res: ServerResponse) {
+  handleRequest(req: IncomingMessage, res: ServerResponse) {
     const spatula = new Spatula(req, res);
 
-    try {
-      const stack = this.stack();
-      await stack(spatula, async () => {
-        await this.#router.lookup(req, res, { spatula });
-      });
-    } catch (err) {
+    const stack = this.stack();
+    stack(spatula, () => {
+      return Promise.resolve(this.#router.lookup(req, res, { spatula }));
+    }).catch((err) => {
       this.handleError(spatula, err);
-    }
+    });
   }
 
   private handleError(spatula: Spatula, error: Error) {

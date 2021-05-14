@@ -21,51 +21,15 @@ const $response = t.Object({
 const routeA = route("GET", "/user/:id")
   .query($query)
   .response($response)
-  .use(async (_spatula, next) => {
-    console.log("3");
-    await next();
-  })
-  .use(async (_spatula, next) => {
-    await next();
-    console.log("4");
-  })
-  .handle((ctx) => {
-    console.log(ctx.params);
+  .handle(() => {
     return {
       list: [{ name: "yinz", age: 13 }],
       page: 1,
     };
   });
 
-const routeB = route("POST", "/user")
-  .body(
-    t.Object({
-      username: t.String({ minLength: 4 }),
-      password: t.String({ minLength: 4 }),
-      email: t.String({ format: "email" }),
-    })
-  )
-  .handle(async (ctx) => {
-    const { username, password, email } = ctx.body;
-    // await db.save("user", { username, password, email });
-    return {
-      username,
-      password,
-      email,
-    };
-  });
-
 app
   .use(parseBody())
-  .use(async (_spatula, next) => {
-    console.log("1");
-    await next();
-    console.log("2");
-  })
-  .use(async (_spatula, next) => {
-    await next();
-    console.log("2");
-  })
-  .mount([routeA, routeB])
+  .mount(routeA)
   .start(3000)
   .then(() => console.log("Lid start"));
