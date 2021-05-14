@@ -1,6 +1,7 @@
 import qs from "querystring";
 import { HTTPMethod } from "find-my-way";
 import { IncomingMessage, ServerResponse } from "http";
+import { isArray } from "./utils";
 
 export class Spatula<Method extends HTTPMethod = HTTPMethod> {
   readonly url: string;
@@ -28,14 +29,15 @@ export class Spatula<Method extends HTTPMethod = HTTPMethod> {
     return this;
   }
 
-  header(key: string, value?: string) {
-    if (value) {
-      this.res.setHeader(key, value);
+  header(key: string, value?: string | number | (string | number)[]) {
+    if (value !== undefined) {
+      const v = isArray(value) ? value.join(",") : value.toString();
+      this.res.setHeader(key, v);
     }
     return this;
   }
 
-  send(data?: string | Buffer) {
+  end(data?: string | Buffer) {
     this.res.end(data);
     return this;
   }
