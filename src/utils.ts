@@ -18,3 +18,15 @@ export function upperFirst<T extends string>(s: T) {
 export function isBuffer(v: unknown): v is Buffer {
   return v instanceof Buffer;
 }
+
+export const { isArray } = Array;
+
+/**
+ * assert is item in arr
+ * @param arr
+ * @param item
+ */
+export function includes<T>(arr: T[], item: unknown): item is T {
+  // @ts-ignore
+  return arr.includes(item);
+}

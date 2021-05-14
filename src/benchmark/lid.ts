@@ -1,4 +1,5 @@
 import { lid, route, t } from "..";
+import { parseBody } from "../middlewares/body-parser";
 
 const app = lid();
 
@@ -24,8 +25,8 @@ const routeA = route("GET", "/user/:id")
     console.log("3");
     next();
   })
-  .use((_spatula, next) => {
-    next();
+  .use(async (_spatula, next) => {
+    await next();
     console.log("4");
   })
   .handle((ctx) => {
@@ -36,15 +37,35 @@ const routeA = route("GET", "/user/:id")
     };
   });
 
+const routeB = route("POST", "/user/")
+  .body(
+    t.Object({
+      username: t.String({ minLength: 4 }),
+      password: t.String({ minLength: 4 }),
+      email: t.String({ format: "email" }),
+    })
+  )
+  .handle(async (ctx) => {
+    const { username, password, email } = ctx.body;
+    // await db.save("user", { username, password, email });
+    return {
+      username,
+      password,
+      email,
+    };
+  });
+
 app
+  .use(parseBody())
   .use((_spatula, next) => {
     console.log("1");
     next();
   })
-  .use((_spatula, next) => {
-    next();
+  .use(async (_spatula, next) => {
+    await next();
     console.log("2");
   })
   .mount(routeA)
+  .mount(routeB)
   .boiling(3000)
   .then(() => console.log("Lid start"));
