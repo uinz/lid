@@ -111,7 +111,7 @@ export class Route<
         },
       };
       const data = await this.#handler(ctx);
-      this.send(spatula, data);
+      this.end(spatula, data);
     };
 
     return this.spoon(spatula, action);
@@ -155,7 +155,7 @@ export class Route<
     return this;
   }
 
-  private send(spatula: Spatula, data: unknown) {
+  private end(spatula: Spatula, data: unknown) {
     if (isString(data)) {
       spatula
         .header("Content-Type", "text/plain") // plain
