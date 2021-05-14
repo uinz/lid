@@ -1,6 +1,8 @@
 import { Static, TSchema, Type } from "@sinclair/typebox";
+import createError from "http-errors";
 import Ajv from "ajv";
 import fastJSON from "fast-json-stringify";
+import ajvFormats from "ajv-formats";
 import { HTTPMethod } from "find-my-way";
 import { Spatula } from "./spatula";
 import { Params, Prettier } from "./types";
@@ -31,8 +33,6 @@ export type Handler<Method, Params, Query, Body, Return> = (
   ctx: Ctx<Method, Params, Query, Body>
 ) => Return | Promise<Return>;
 
-const ajv = new Ajv({ useDefaults: true, coerceTypes: true, strict: false });
-
 export type TRoute<
   TMethod extends HTTPMethod,
   TPath extends string,
@@ -46,6 +46,15 @@ export type TRoute<
 export function route<Method extends HTTPMethod, Path extends string>(method: Method, path: Path) {
   return new Route(method, path);
 }
+
+const ajv = ajvFormats(
+  new Ajv({
+    allErrors: true,
+    useDefaults: true,
+    coerceTypes: true,
+    strict: false,
+  })
+);
 
 export class Route<
   TMethod extends HTTPMethod = HTTPMethod,
@@ -65,11 +74,25 @@ export class Route<
       const { url, method, query, body } = spatula;
 
       if (!this.#queryValidate(query)) {
-        throw new Error(`query: ${ajv.errorsText()}`);
+        // @ts-ignore
+        throw createError(
+          400,
+          ajv.errorsText(ajv.errors, {
+            separator: "\n",
+            dataVar: "query",
+          })
+        );
       }
 
       if (!this.#bodyValidate(body)) {
-        throw new Error(`query: ${ajv.errorsText()}`);
+        // @ts-ignore
+        throw createError(
+          400,
+          ajv.errorsText(ajv.errors, {
+            separator: "\n",
+            dataVar: "body",
+          })
+        );
       }
 
       const ctx: Ctx<TMethod, TParams, TQuery, TBody> = {
@@ -136,18 +159,18 @@ export class Route<
     if (isString(data)) {
       spatula
         .header("Content-Type", "text/plain") // plain
-        .send(data);
+        .end(data);
       return;
     }
 
     if (isBuffer(data)) {
-      spatula.send(data);
+      spatula.end(data);
       return;
     }
 
     spatula
       .header("Content-Type", "application/json") // json header
-      .send(this.#responseStringify(data));
+      .end(this.#responseStringify(data));
   }
 }
 
