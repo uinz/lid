@@ -1,5 +1,6 @@
 import findMyWay from "find-my-way";
 import { createServer } from "http";
+import createHttpError, { isHttpError } from "http-errors";
 import { IRoute } from "./route";
 import { Spatula } from "./spatula";
 import { Wok } from "./wok";
@@ -13,9 +14,8 @@ export class Lid extends Wok {
   readonly #router = findMyWay({
     ignoreTrailingSlash: true,
     caseSensitive: false,
-    defaultRoute(req, res) {
-      res.statusCode = 404;
-      res.end(`<h1>404</h1><p>${req.url}</p>`);
+    defaultRoute() {
+      throw createHttpError(404);
     },
   });
 
@@ -42,20 +42,38 @@ export class Lid extends Wok {
   }
 
   private async stir(spatula: Spatula) {
-    try {
-      // depend on #lookup will return handle result(Promise)
-      const route = () => this.#router.lookup(spatula.req, spatula.res, { spatula });
-      await this.spoon(spatula, route);
-    } catch (err) {
-      this.handleError(spatula, err);
-    }
+    // depend on #lookup will return handle result(Promise)
+    const route = async () => {
+      try {
+        await this.#router.lookup(spatula.req, spatula.res, { spatula });
+      } catch (err) {
+        this.handleError(spatula, err);
+      }
+    };
+    await this.spoon(spatula, route);
   }
 
-  private handleError(spatula: Spatula, err: Error) {
-    console.log("Error", err);
-    spatula
-      .status(500)
-      .send(`<h1>500</h1></p>${spatula.url}</p></p>${err.message}</p><pre>${err.stack}</pre>`);
+  private handleError(spatula: Spatula, error: Error) {
+    if (isHttpError(error)) {
+      const data = {
+        status: error.status,
+        message: error.message,
+        stack: process.env.NODE_ENV !== "production" ? error.stack : error.message,
+      };
+      spatula
+        .status(error.status)
+        .header("Content-Type", "application/json")
+        .end(JSON.stringify(data));
+    } else {
+      spatula
+        .status(500)
+        .header("Content-Type", "application/json")
+        .end(
+          JSON.stringify({
+            status: 500,
+          })
+        );
+    }
   }
 }
 
