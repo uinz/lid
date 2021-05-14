@@ -2,11 +2,7 @@ import { IncomingMessage } from "http";
 import zlib from "zlib";
 import { Middleware } from "../../wok";
 
-interface Options {
-  // TODO
-}
-
-export function parseBody(options?: Options): Middleware {
+export function parseBody(): Middleware {
   return async (spatula, next) => {
     const contentType = spatula.req.headers["content-type"] ?? "text/plain";
     const content = await getContent(spatula.req);
@@ -17,7 +13,7 @@ export function parseBody(options?: Options): Middleware {
       spatula.body = content;
     }
 
-    next();
+    await next();
   };
 }
 

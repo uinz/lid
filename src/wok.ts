@@ -1,13 +1,14 @@
 import { Spatula } from "./spatula";
+import { isArray } from "./utils";
 
-export type Next<T = void> = () => Promise<T> | T;
-export type Middleware<T = void> = (spatula: Spatula, next: Next) => Promise<T> | T;
+export type Next = () => Promise<void> | void;
+export type Middleware = (spatula: Spatula, next: Next) => Promise<void> | void;
 
 export class Wok {
   #mids: Middleware[] = [];
 
   use(middle: Middleware | Middleware[]) {
-    if (Array.isArray(middle)) {
+    if (isArray(middle)) {
       this.#mids.push(...middle);
     } else {
       this.#mids.push(middle);
@@ -15,17 +16,27 @@ export class Wok {
     return this;
   }
 
-  async spoon(spatula: Spatula, crust: Next) {
-    let i = 0;
-    const pop = () => this.#mids[i++];
-    const next = async () => {
-      const middle = pop();
-      if (middle) {
-        await middle(spatula, next);
-      } else {
-        await crust();
-      }
-    };
-    return next();
+  stack() {
+    return compose(this.#mids);
   }
+}
+
+function compose(middles: Middleware[]): Middleware {
+  let index = -1;
+
+  return (spatula, next) => {
+    const dispatch = (i: number): Promise<void> | void => {
+      if (i <= index) {
+        throw new Error("next() called multi times");
+      }
+      index = i;
+      if (index === middles.length) {
+        return next();
+      }
+      const mid = middles[index]!;
+      return mid(spatula, () => dispatch(index + 1));
+    };
+
+    return dispatch(0);
+  };
 }

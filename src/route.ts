@@ -1,9 +1,9 @@
 import { Static, TSchema, Type } from "@sinclair/typebox";
-import createError from "http-errors";
 import Ajv from "ajv";
-import fastJSON from "fast-json-stringify";
 import ajvFormats from "ajv-formats";
+import fastJSON from "fast-json-stringify";
 import { HTTPMethod } from "find-my-way";
+import createHttpError from "http-errors";
 import { Spatula } from "./spatula";
 import { Params, Prettier } from "./types";
 import { isBuffer, isString } from "./utils";
@@ -16,22 +16,17 @@ export const t = Type;
 export interface IRoute {
   method: HTTPMethod;
   path: string;
-  run: Route["run"];
+  handleRequest: Route["handleRequest"];
 }
 
-export type Ctx<Method, Params, Query, Body> = {
-  method: Method;
-  url: string;
-  params: Params;
-  query: Query;
-  body: Body;
-  status(code: number): Ctx<Method, Params, Query, Body>;
-  header(key: string, value: string): Ctx<Method, Params, Query, Body>;
-};
-
-export type Handler<Method, Params, Query, Body, Return> = (
-  ctx: Ctx<Method, Params, Query, Body>
-) => Return | Promise<Return>;
+export type Handler<
+  Method extends HTTPMethod = any,
+  Path extends string = any,
+  Params extends object = any,
+  Query extends object = any,
+  Body = any,
+  Return = any
+> = (spatula: Spatula<Method, Path, Params, Query, Body>) => Return | Promise<Return>;
 
 export type TRoute<
   TMethod extends HTTPMethod,
@@ -69,52 +64,23 @@ export class Route<
     super();
   }
 
-  run(spatula: Spatula<TMethod>, params: TParams) {
-    const action = async () => {
-      const { url, method, query, body } = spatula;
+  private assets(
+    spatula: Spatula
+  ): asserts spatula is Spatula<TMethod, TPath, TParams, TQuery, TBody> {
+    if (!this.#bodyValidate(spatula.body)) {
+      throw createHttpError(400, ajv.errorsText(ajv.errors, { dataVar: "query" }));
+    }
+    if (!this.#queryValidate(spatula.body)) {
+      throw createHttpError(400, ajv.errorsText(ajv.errors, { dataVar: "body" }));
+    }
+  }
 
-      if (!this.#queryValidate(query)) {
-        // @ts-ignore
-        throw createError(
-          400,
-          ajv.errorsText(ajv.errors, {
-            separator: "\n",
-            dataVar: "query",
-          })
-        );
-      }
-
-      if (!this.#bodyValidate(body)) {
-        // @ts-ignore
-        throw createError(
-          400,
-          ajv.errorsText(ajv.errors, {
-            separator: "\n",
-            dataVar: "body",
-          })
-        );
-      }
-
-      const ctx: Ctx<TMethod, TParams, TQuery, TBody> = {
-        params,
-        url,
-        method,
-        query,
-        body,
-        status(code: number) {
-          spatula.status(code);
-          return ctx;
-        },
-        header(key: string, value: string) {
-          spatula.header(key, value);
-          return ctx;
-        },
-      };
-      const data = await this.#handler(ctx);
-      this.end(spatula, data);
-    };
-
-    return this.spoon(spatula, action);
+  async handleRequest(spatula: Spatula) {
+    await this.stack()(spatula, async () => {
+      this.assets(spatula);
+      const result = await this.#handler(spatula);
+      this.end(spatula, this.#bodyValidate(result));
+    });
   }
 
   #queryValidate = (_: unknown): _ is TQuery => true;
@@ -130,9 +96,7 @@ export class Route<
   body<S extends TSchema>(
     schema: S
   ): TRoute<TMethod, TPath, TParams, TQuery, Infer<S>, TResponse, TUsed | "body"> {
-    this.#bodyValidate = (body): body is TBody => {
-      return ajv.validate(schema, body);
-    };
+    this.#bodyValidate = (body): body is TBody => ajv.validate(schema, body);
     // @ts-ignore
     return this;
   }
@@ -142,16 +106,16 @@ export class Route<
     schema: S
   ): TRoute<TMethod, TPath, TParams, TQuery, TBody, Infer<S>, TUsed | "response"> {
     this.#responseStringify = fastJSON(schema);
-    // @ts-ignore: 类型
+    // @ts-ignore: types
     return this;
   }
 
-  #handler: Handler<TMethod, TParams, TQuery, TBody, TResponse> = DEFAULT_HANDLER;
+  #handler: Handler<TMethod, TPath, TParams, TQuery, TBody, TResponse> = DEFAULT_HANDLER;
   handle(
-    handler: Handler<TMethod, TParams, TQuery, TBody, TResponse>
+    handler: Handler<TMethod, TPath, TParams, TQuery, TBody, TResponse>
   ): TRoute<TMethod, TPath, TParams, TQuery, TBody, TResponse, TUsed | "handle"> {
     this.#handler = handler;
-    // @ts-ignore: 类型
+    // @ts-ignore: types
     return this;
   }
 

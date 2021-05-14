@@ -20,4 +20,4 @@ export type Fn = (...args: any[]) => any;
 
 export type Req = IncomingMessage;
 export type Res = ServerResponse;
-export type Next = () => Promise<void>;
+export type Next = () => void | Promise<void>;

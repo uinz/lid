@@ -3,13 +3,20 @@ import { HTTPMethod } from "find-my-way";
 import { IncomingMessage, ServerResponse } from "http";
 import { isArray } from "./utils";
 
-export class Spatula<Method extends HTTPMethod = HTTPMethod> {
+export class Spatula<
+  Method extends HTTPMethod = any,
+  Path extends string = any,
+  Params extends object = any,
+  Query extends object = any,
+  Body = any
+> {
   readonly url: string;
-  readonly path: string;
-  readonly query: object;
+  readonly path: Path;
+  readonly query: Query;
   readonly method: Method;
 
-  body?: unknown;
+  params!: Params;
+  body!: Body;
 
   constructor(readonly req: IncomingMessage, readonly res: ServerResponse) {
     const url = req.url ?? "";
@@ -17,8 +24,8 @@ export class Spatula<Method extends HTTPMethod = HTTPMethod> {
     const queryStr = url.slice(i + 1);
 
     this.url = url;
-    this.path = url.slice(0, i);
-    this.query = { ...qs.parse(queryStr) };
+    this.path = url.slice(0, i) as Path;
+    this.query = { ...qs.parse(queryStr) } as Query;
     this.method = req.method?.toUpperCase() as Method;
   }
 

@@ -57,15 +57,15 @@ const routeB = route("POST", "/user/")
 
 app
   .use(parseBody())
-  .use((_spatula, next) => {
+  .use(async (_spatula, next) => {
     console.log("1");
-    next();
+    await next();
+    console.log("2");
   })
   .use(async (_spatula, next) => {
     await next();
     console.log("2");
   })
-  .mount(routeA)
-  .mount(routeB)
-  .boiling(3000)
+  .mount([routeA, routeB])
+  .start(3000)
   .then(() => console.log("Lid start"));

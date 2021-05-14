@@ -69,7 +69,7 @@ function configureMaxAge(spatula: Spatula, options: Options) {
 export function cors(options: Partial<Options>): Middleware {
   const opt = { ...DEFAULT_OPTIONS, ...options };
 
-  return (spatula, next) => {
+  return async (spatula, next) => {
     configureOrigin(spatula, opt);
     configureCredentials(spatula, opt);
     configureExposedHeaders(spatula, opt);
