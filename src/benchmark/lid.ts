@@ -21,9 +21,9 @@ const $response = t.Object({
 const routeA = route("GET", "/user/:id")
   .query($query)
   .response($response)
-  .use((_spatula, next) => {
+  .use(async (_spatula, next) => {
     console.log("3");
-    next();
+    await next();
   })
   .use(async (_spatula, next) => {
     await next();
@@ -37,7 +37,7 @@ const routeA = route("GET", "/user/:id")
     };
   });
 
-const routeB = route("POST", "/user/")
+const routeB = route("POST", "/user")
   .body(
     t.Object({
       username: t.String({ minLength: 4 }),

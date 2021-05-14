@@ -1,4 +1,6 @@
 import express from "express";
+// @ts-ignore
+import cors from "cors";
 
 const app = express();
 
@@ -11,6 +13,7 @@ app.use((_req, _res, next) => {
 const route = express.Router();
 
 route
+  .use(cors())
   .use((req, res, next) => {
     console.log(3);
     next();
@@ -25,4 +28,4 @@ route
   });
 
 app.use(route);
-app.listen(3001);
+app.listen(3000);

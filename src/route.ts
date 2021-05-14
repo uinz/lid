@@ -67,10 +67,10 @@ export class Route<
   private assets(
     spatula: Spatula
   ): asserts spatula is Spatula<TMethod, TPath, TParams, TQuery, TBody> {
-    if (!this.#bodyValidate(spatula.body)) {
+    if (!this.#queryValidate(spatula.query)) {
       throw createHttpError(400, ajv.errorsText(ajv.errors, { dataVar: "query" }));
     }
-    if (!this.#queryValidate(spatula.body)) {
+    if (!this.#bodyValidate(spatula.body)) {
       throw createHttpError(400, ajv.errorsText(ajv.errors, { dataVar: "body" }));
     }
   }
@@ -79,7 +79,7 @@ export class Route<
     await this.stack()(spatula, async () => {
       this.assets(spatula);
       const result = await this.#handler(spatula);
-      this.end(spatula, this.#bodyValidate(result));
+      this.end(spatula, this.#responseStringify(result));
     });
   }
 
