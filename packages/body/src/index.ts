@@ -1,3 +1,6 @@
+/* eslint-disable require-atomic-updates */
+
+import querystring from "querystring";
 import { Middleware } from "@lid-http/core";
 import { IncomingMessage } from "http";
 import zlib from "zlib";
@@ -7,12 +10,14 @@ export function parseBody(): Middleware {
     let contentType = spatula.req.headers["content-type"] ?? "text/plain";
     let content = await getContent(spatula.req);
 
-    if (contentType.includes("application/json") && content) {
-      // eslint-disable-next-line require-atomic-updates
-      spatula.body = JSON.parse(content);
-    } else {
-      // eslint-disable-next-line require-atomic-updates
-      spatula.body = content;
+    if (content) {
+      if (contentType.includes("application/json")) {
+        spatula.body = JSON.parse(content);
+      } else if (contentType.includes("application/x-www-form-urlencoded")) {
+        spatula.body = { ...querystring.parse(content) };
+      } else {
+        spatula.body = content;
+      }
     }
 
     return next();
