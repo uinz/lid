@@ -53,8 +53,8 @@ const getUser = route("GET", "/users/:id(\\d+)")
     let username = `yinz-${id}`;
     let email = `${username}@example.com`;
 
-    // return type should assign to the `$response` type
-    // otherwise will get type error
+    // The return type needs to be assignable to the $response type,
+    // otherwise there will be a type error
     return {
       id,
       username,
