@@ -37,7 +37,7 @@ describe("lid core", () => {
         expect(res.body).toMatchObject({
           status: 400,
           message:
-            "query must have required property 'skip', query must have required property 'take', query must NOT have additional properties",
+            "query must have required property 'skip', query must have required property 'take'",
           stack: expect.stringContaining("BadRequestError"),
         });
       });

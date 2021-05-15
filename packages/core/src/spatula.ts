@@ -20,12 +20,16 @@ export class Spatula<
   constructor(readonly req: IncomingMessage, readonly res: ServerResponse) {
     let url = req.url ?? "";
     let i = url.indexOf("?");
-    let queryStr = url.slice(i + 1);
 
     this.url = url;
     this.path = url.slice(0, i) as Path;
-    this.query = { ...qs.parse(queryStr) } as Query;
     this.method = req.method?.toUpperCase() as Method;
+
+    if (i > -1) {
+      this.query = { ...qs.parse(url.slice(i + 1)) } as Query;
+    } else {
+      this.query = {} as Query;
+    }
   }
 
   status(code?: number) {
