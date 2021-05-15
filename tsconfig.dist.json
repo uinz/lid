@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "references": [
+    {
+      "path": "./packages/core/tsconfig.json"
+    },
+    {
+      "path": "./packages/utils/tsconfig.json"
+    },
+    {
+      "path": "./packages/body/tsconfig.json"
+    },
+    {
+      "path": "./packages/cors/tsconfig.json"
+    },
+    {
+      "path": "./packages/open-api/tsconfig.json"
+    }
+  ],
+  "include": ["./packages/"]
+}

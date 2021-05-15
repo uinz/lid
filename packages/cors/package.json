@@ -1,0 +1,9 @@
+{
+  "version": "0.0.1-beta",
+  "name": "@lid-http/cors",
+  "main": "./dist/index.js",
+  "dependencies": {
+    "@lid-http/core": "workspace:*",
+    "@lid-http/utils": "workspace:*"
+  }
+}

@@ -6,9 +6,7 @@
     "strict": true,
     "esModuleInterop": true,
     "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "rootDir": "src",
-    "outDir": "dist"
-  }
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["./packages/"]
 }

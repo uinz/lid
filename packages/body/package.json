@@ -1,0 +1,8 @@
+{
+  "version": "0.0.1-beta",
+  "name": "@lid-http/body",
+  "main": "./dist/index.js",
+  "dependencies": {
+    "@lid-http/core": "workspace:*"
+  }
+}

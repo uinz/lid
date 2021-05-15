@@ -1,6 +1,5 @@
-import { Spatula } from "../../spatula";
-import { includes, isString } from "../../utils";
-import { Middleware } from "../../wok";
+import { Spatula, Middleware } from "@lid-http/core";
+import { includes, isString } from "@lid-http/utils";
 
 interface Options {
   origin: string | string[];
@@ -17,7 +16,7 @@ const DEFAULT_OPTIONS = {
 } as const;
 
 function configureOrigin(spatula: Spatula, options: Options) {
-  const requestOrigin = spatula.req.headers.origin;
+  let requestOrigin = spatula.req.headers.origin;
   if (options.origin === "*") {
     spatula.header("Access-Control-Allow-Origin", "*");
     return;
@@ -42,7 +41,7 @@ function configureCredentials(spatula: Spatula, options: Options) {
 }
 
 function configureAllowedHeaders(spatula: Spatula, options: Options) {
-  const allowedHeaders =
+  let allowedHeaders =
     options.allowedHeaders ?? spatula.req.headers["access-control-request-headers"];
 
   spatula.header("Access-Control-Allow-Headers", allowedHeaders);
@@ -67,7 +66,7 @@ function configureMaxAge(spatula: Spatula, options: Options) {
  * ```
  */
 export function cors(options: Partial<Options>): Middleware {
-  const opt = { ...DEFAULT_OPTIONS, ...options };
+  let opt = { ...DEFAULT_OPTIONS, ...options };
 
   return async (spatula, next) => {
     configureOrigin(spatula, opt);
@@ -86,6 +85,6 @@ export function cors(options: Partial<Options>): Middleware {
     spatula
       .status(204) // status
       .header("Content-Length", 0) // safari
-      .end();
+      .send();
   };
 }

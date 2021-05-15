@@ -1,0 +1,9 @@
+{
+  "name": "@lid-http/example",
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@lid-http/core": "workspace:*"
+  }
+}

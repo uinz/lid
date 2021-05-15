@@ -6,20 +6,21 @@ export function isRegExp(v: unknown): v is RegExp {
   return v instanceof RegExp;
 }
 
-export function upperFirst<T extends string>(s: T) {
-  type R = T extends `${infer A}${infer B}` ? `${Uppercase<A>}${B}` : T;
-  let r = "" as R;
+export function capitalize<T extends string>(s: T): Capitalize<T> {
+  let r = "";
   if (s) {
-    s[0]?.toUpperCase() + s.slice(1);
+    r = s[0]?.toUpperCase() + s.slice(1);
   }
-  return r;
+  return r as Capitalize<T>;
 }
 
-export function isBuffer(v: unknown): v is Buffer {
-  return v instanceof Buffer;
+export function uncapitalize<T extends string>(s: T): Uncapitalize<T> {
+  let r = "";
+  if (s) {
+    r = s[0]?.toLowerCase() + s.slice(1);
+  }
+  return r as Uncapitalize<T>;
 }
-
-export const { isArray } = Array;
 
 /**
  * assert is item in arr
@@ -27,7 +28,7 @@ export const { isArray } = Array;
  * @param item
  */
 export function includes<T>(arr: T[], item: unknown): item is T {
-  // @ts-ignore
+  // @ts-ignore: improve includes
   return arr.includes(item);
 }
 
@@ -35,7 +36,7 @@ export function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (error: Error) => void;
 
-  const promise = new Promise<T>((res, rej) => {
+  let promise = new Promise<T>((res, rej) => {
     resolve = res;
     reject = rej;
   });
@@ -51,4 +52,8 @@ export function delay(t: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, t);
   });
+}
+
+export function noop(..._args: any[]): any {
+  // noop
 }

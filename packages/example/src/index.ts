@@ -1,17 +1,3 @@
-# Lid
-
-**Goal:** Simple, efficient and type-safe http framework
-
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-[![CI](https://github.com/uinz/lid/actions/workflows/main.yml/badge.svg?)](https://github.com/uinz/lid/actions/workflows/main.yml)
-
-<img style="text-align:center" src="./logo.png" width="240">
-
----
-
-# Example
-
-```ts
 import { Lid, route, Router, Type } from "@lid-http/core";
 
 // new app instance
@@ -89,28 +75,3 @@ void app
 //   "username": "yinz-13",
 //   "email": "yinz-13@example.com",
 // }
-```
-
-find more examples from [here](./packages/example)
-
-# Reference content
-
-## fastify
-
-- use `find-my-way` (Prefix Tree) for router
-- use `fast-json-stringify` for stringify
-- use `@sinclair/typebox` generate json-schema
-- use `ajv` for validate
-
-## Koa
-
-- onion model
-
-## TODO
-
-- [ ] Testing
-  - [ ] type
-  - [ ] unit
-  - [ ] e2e
-- [ ] OpenAPI
-- [ ] Performance

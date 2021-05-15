@@ -1,15 +1,17 @@
+import { Middleware } from "@lid-http/core";
 import { IncomingMessage } from "http";
 import zlib from "zlib";
-import { Middleware } from "../../wok";
 
 export function parseBody(): Middleware {
   return async (spatula, next) => {
-    const contentType = spatula.req.headers["content-type"] ?? "text/plain";
-    const content = await getContent(spatula.req);
+    let contentType = spatula.req.headers["content-type"] ?? "text/plain";
+    let content = await getContent(spatula.req);
 
     if (contentType.includes("application/json") && content) {
+      // eslint-disable-next-line require-atomic-updates
       spatula.body = JSON.parse(content);
     } else {
+      // eslint-disable-next-line require-atomic-updates
       spatula.body = content;
     }
 
@@ -19,21 +21,21 @@ export function parseBody(): Middleware {
 
 function getContent(req: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
-    const length = req.headers["content-length"] ?? 0;
+    let length = req.headers["content-length"] ?? 0;
     if (length === 0) {
       resolve("");
       return;
     }
-    const buffers: Buffer[] = [];
-    const encoding = req.headers["content-encoding"];
-    const stream = crateStream(req, encoding);
+    let buffers: Buffer[] = [];
+    let encoding = req.headers["content-encoding"];
+    let stream = crateStream(req, encoding);
 
     stream.on("data", (data) => {
       buffers.push(data);
     });
 
     stream.on("end", () => {
-      const content = Buffer.concat(buffers).toString();
+      let content = Buffer.concat(buffers).toString();
       resolve(content);
     });
 
@@ -43,13 +45,13 @@ function getContent(req: IncomingMessage) {
 
 function crateStream(req: IncomingMessage, encoding?: string) {
   if (encoding === "gzip") {
-    const stream = zlib.createGunzip();
+    let stream = zlib.createGunzip();
     req.pipe(stream);
     return stream;
   }
 
   if (encoding === "deflate") {
-    const stream = zlib.createInflate();
+    let stream = zlib.createInflate();
     req.pipe(stream);
     return stream;
   }

@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "@lid-http/open-api",
+  "main": "./dist/index.js",
+  "dependencies": {
+    "@sinclair/typebox": "^0.16.5",
+    "@lid-http/core": "workspace:*"
+  }
+}

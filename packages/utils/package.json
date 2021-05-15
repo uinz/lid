@@ -1,0 +1,5 @@
+{
+  "version": "0.0.1-beta",
+  "name": "@lid-http/utils",
+  "main": "./dist/index.js"
+}

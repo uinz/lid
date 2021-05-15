@@ -1,5 +1,5 @@
+import { HTTPMethod } from "@lid-http/core";
 import { TSchema } from "@sinclair/typebox";
-import { HTTPMethod } from "find-my-way";
 
 interface Info {
   title: string;
@@ -13,7 +13,7 @@ interface Schemas {
 }
 
 export function openAPI(info: Info) {
-  return (method: HTTPMethod, path: string, type: string, schemas: Schemas) => {
+  return (_method: HTTPMethod, _path: string, _type: string, _schemas: Schemas) => {
     return {
       openapi: "3.1.0",
       info,
