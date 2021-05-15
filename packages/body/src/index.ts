@@ -33,7 +33,7 @@ function getContent(req: IncomingMessage) {
     }
     let buffers: Buffer[] = [];
     let encoding = req.headers["content-encoding"];
-    let stream = crateStream(req, encoding);
+    let stream = createStream(req, encoding);
 
     stream.on("data", (data) => {
       buffers.push(data);
@@ -48,7 +48,7 @@ function getContent(req: IncomingMessage) {
   });
 }
 
-function crateStream(req: IncomingMessage, encoding?: string) {
+function createStream(req: IncomingMessage, encoding?: string) {
   if (encoding === "gzip") {
     let stream = zlib.createGunzip();
     req.pipe(stream);
