@@ -8,6 +8,7 @@
     "pino": "^6.11.3"
   },
   "devDependencies": {
-    "@types/http-errors": "^1.8.0"
+    "@types/http-errors": "^1.8.0",
+    "@types/pino": "^6.3.8"
   }
 }

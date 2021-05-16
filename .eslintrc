@@ -18,6 +18,7 @@
     "getter-return": "error",
     "no-async-promise-executor": "error",
     "no-compare-neg-zero": "error",
+    "no-console": "error",
     "no-cond-assign": "error",
     "no-constant-condition": "error",
     "no-debugger": "error",

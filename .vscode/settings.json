@@ -1,4 +1,12 @@
 {
-  "cSpell.words": ["fastify", "middlewares", "openapi", "pnpm", "uncapitalize", "yinz"],
+  "cSpell.words": [
+    "Pino",
+    "fastify",
+    "middlewares",
+    "openapi",
+    "pnpm",
+    "uncapitalize",
+    "yinz"
+  ],
   "jestrunner.jestPath": "/Users/yinz/Github/yinz13/fffff/node_modules/jest/bin/jest.js"
 }

@@ -2,25 +2,27 @@ import { Lid } from "@lid-http/core";
 import { route, Router, Type } from "@lid-http/router";
 
 // new app instance
-const app = new Lid();
+const app = new Lid({
+  logger: true,
+});
 
 // configure `middleware` for the whole app
-app.use(async (_, next) => {
-  console.log("app 1");
+app.use(async ({ logger }, next) => {
+  logger.info("app 1");
   // like koa, must await or return the `next()`
   await next();
-  console.log("app 2");
+  logger.info("app 2");
 });
 
 // new router with prefix
 const router = new Router("/example");
 
 // can configure `middleware` for this router separately
-router.use(async (_, next) => {
-  console.log("router 1");
+router.use(async ({ logger }, next) => {
+  logger.info("router 1");
   // like koa, must await or return the `next()`
   await next();
-  console.log("router 2");
+  logger.info("router 2");
 });
 
 const $response = Type.Object({
@@ -60,9 +62,11 @@ void app
   .use(router.routes()) // mount router
   .start(3000) // start server
   .then(() => {
+    // eslint-disable-next-line no-console
     console.log("Lid example start...");
   })
   .catch((err) => {
+    // eslint-disable-next-line no-console
     console.error("Lid start up fail", err);
   });
 

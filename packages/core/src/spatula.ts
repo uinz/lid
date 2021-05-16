@@ -1,5 +1,6 @@
 import { IncomingMessage, ServerResponse } from "http";
 import qs from "querystring";
+import { createLogger, Logger } from "./logger";
 
 export class Spatula<
   Method extends string = any,
@@ -12,6 +13,7 @@ export class Spatula<
   readonly path: Path;
   readonly query: Query;
   readonly method: Method;
+  readonly logger: Logger;
 
   params!: Params;
   body!: Body;
@@ -19,6 +21,8 @@ export class Spatula<
   constructor(readonly req: IncomingMessage, readonly res: ServerResponse) {
     let url = req.url ?? "";
     let i = url.indexOf("?");
+
+    this.logger = createLogger(req);
 
     this.url = url;
     this.path = url.slice(0, i) as Path;

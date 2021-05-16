@@ -1,11 +1,26 @@
 import { noop } from "@lid-http/utils";
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { isHttpError } from "http-errors";
+import { setLevel, pino, Level } from "./logger";
 import { Spatula } from "./spatula";
 import { Wok } from "./wok";
 
+interface Options {
+  logger?: Level;
+}
+
 export class Lid extends Wok {
   readonly #server = createServer(this.handleRequest.bind(this));
+
+  constructor(options?: Options) {
+    super();
+
+    setLevel(options?.logger);
+
+    process.on("unhandledRejection", (err) => {
+      pino.error("unhandledRejection", err);
+    });
+  }
 
   start(port: number) {
     return new Promise<void>((resolve) => {
