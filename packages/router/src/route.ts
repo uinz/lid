@@ -69,7 +69,7 @@ export class Route<
   body<S extends TSchema>(
     schema: S
   ): TRoute<TMethod, TPath, TParams, TQuery, Infer<S>, TResponse, TUsed | "body"> {
-    this.#bodyValidate = (body): body is TBody => ajv.validate(schema, body);
+    this.#bodyValidate = ajv.compile(schema);
     return this as any;
   }
 
