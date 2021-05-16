@@ -14,6 +14,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "dev": "tsc --build ./tsconfig.dist.json --watch",
     "build": "tsc --build ./tsconfig.dist.json",
     "clean": "tsc --build --clean ./tsconfig.dist.json",
     "lint": "eslint ./packages",

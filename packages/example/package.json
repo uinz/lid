@@ -4,6 +4,7 @@
     "start": "ts-node src/index.ts"
   },
   "dependencies": {
-    "@lid-http/core": "workspace:*"
+    "@lid-http/core": "workspace:*",
+    "@lid-http/router": "workspace:*"
   }
 }

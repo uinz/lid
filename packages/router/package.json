@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1-beta",
+  "name": "@lid-http/router",
+  "main": "./dist/index.js",
+  "dependencies": {
+    "@lid-http/core": "workspace:*",
+    "@lid-http/utils": "workspace:*",
+    "@sinclair/typebox": "^0.16.5",
+    "ajv": "^8.4.0",
+    "ajv-formats": "^2.1.0",
+    "fast-json-stringify": "^2.7.3",
+    "find-my-way": "^4.1.0"
+  }
+}

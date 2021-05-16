@@ -8,6 +8,9 @@
   "references": [
     {
       "path": "../core/tsconfig.json"
+    },
+    {
+      "path": "../router/tsconfig.json"
     }
   ],
   "include": ["./src"]

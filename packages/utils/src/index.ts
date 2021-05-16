@@ -1,3 +1,5 @@
+export type { Split, Awaited, Fn, Prettier } from "./types";
+
 export function isString(v: unknown): v is string {
   return typeof v === "string";
 }

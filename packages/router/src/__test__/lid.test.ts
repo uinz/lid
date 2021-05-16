@@ -1,5 +1,6 @@
 import supertest from "supertest";
-import { Lid, Router, route, Type } from "../src";
+import { Lid } from "@lid-http/core";
+import { Router, route, Type } from "../";
 
 function is<T>(_: T) {}
 

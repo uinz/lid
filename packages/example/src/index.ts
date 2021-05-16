@@ -1,4 +1,5 @@
-import { Lid, route, Router, Type } from "@lid-http/core";
+import { Lid } from "@lid-http/core";
+import { route, Router, Type } from "@lid-http/router";
 
 // new app instance
 const app = new Lid();

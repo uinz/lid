@@ -106,11 +106,5 @@ find more examples from [here](./packages/example)
 
 - onion model
 
-## TODO
-
-- [ ] Testing
-  - [ ] type
-  - [ ] unit
-  - [ ] e2e
 - [ ] OpenAPI
 - [ ] Performance

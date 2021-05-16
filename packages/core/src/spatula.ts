@@ -1,9 +1,8 @@
-import { HTTPMethod } from "find-my-way";
 import { IncomingMessage, ServerResponse } from "http";
 import qs from "querystring";
 
 export class Spatula<
-  Method extends HTTPMethod = any,
+  Method extends string = any,
   Path extends string = any,
   Params extends object = any,
   Query extends object = any,
