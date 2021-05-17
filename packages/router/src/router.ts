@@ -11,6 +11,14 @@ interface MiniRoute {
 }
 
 export class Router extends Wok {
+  #spec = {
+    openapi: "3.1.0",
+    info: {
+      title: "lid-http-open-api",
+      version: `0.0.1`,
+    },
+    webhooks: {} as Record<string, any>,
+  };
   readonly #routes = new WeakSet<MiniRoute>();
   readonly #router = findMyWay({
     ignoreTrailingSlash: true,
@@ -31,6 +39,11 @@ export class Router extends Wok {
         return;
       }
       let routePath = posix.join(this.prefix, route.path);
+
+      // this.addSpec(route.method, route.path, {
+      //   // query: route.
+      // });
+
       this.#router.on(
         route.method,
         routePath,
@@ -53,6 +66,49 @@ export class Router extends Wok {
     });
     this.routes = this.stack;
     return this.stack();
+  }
+
+  private addSpec(
+    method: HTTPMethod,
+    path: string,
+    schemas: { query: any; body: any; response: any }
+  ) {
+    this.#spec.webhooks[path] = this.#spec.webhooks[path] || {};
+    let spec = this.#spec.webhooks[path];
+    spec[method] = {
+      requestBody: {
+        description: "TODO",
+        content: {
+          "application/json": {
+            schema: schemas.body,
+          },
+        },
+      },
+      parameters: [
+        {
+          name: "TODO",
+          in: "query",
+          description: "TODO",
+          required: true,
+          schema: schemas.query,
+        },
+        {
+          name: "TODO",
+          in: "path",
+          description: "TODO",
+          required: true,
+          schema: {
+            TODO: { type: "string" },
+          },
+        },
+      ],
+      response: {
+        "200": {
+          description: "TODO",
+          schema: schemas.body,
+        },
+      },
+    };
   }
 }
 
