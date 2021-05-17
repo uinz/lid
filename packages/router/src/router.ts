@@ -1,16 +1,17 @@
 import { Spatula, Wok } from "@lid-http/core";
+import { pino } from "@lid-http/core/src/logger";
 import findMyWay, { HTTPMethod } from "find-my-way";
 import createHttpError from "http-errors";
 import path from "path";
 
-interface MinRoute {
+interface MiniRoute {
   method: HTTPMethod;
   path: string;
   handlerRequest(spatula: Spatula): void;
 }
 
 export class Router extends Wok {
-  readonly #routes = new WeakSet<MinRoute>();
+  readonly #routes = new WeakSet<MiniRoute>();
   readonly #router = findMyWay({
     ignoreTrailingSlash: true,
     caseSensitive: false,
@@ -23,10 +24,10 @@ export class Router extends Wok {
     super();
   }
 
-  mount(route: MinRoute | MinRoute[] | Record<string, MinRoute>) {
+  mount(route: MiniRoute | MiniRoute[] | Record<string, MiniRoute>) {
     if (isRoute(route)) {
       if (this.#routes.has(route)) {
-        console.warn(`[${route.method}] ${route.path} already mount`);
+        pino.warn(`[${route.method}] ${route.path} already mount`);
         return;
       }
       let routePath = path.join(this.prefix, route.path);
@@ -55,7 +56,7 @@ export class Router extends Wok {
   }
 }
 
-function isRoute(arg: unknown): arg is MinRoute {
+function isRoute(arg: unknown): arg is MiniRoute {
   // @ts-ignore: todo
   return arg && typeof arg.handlerRequest === "function";
 }
