@@ -2,7 +2,7 @@ import { Spatula, Wok } from "@lid-http/core";
 import { pino } from "@lid-http/core/src/logger";
 import findMyWay, { HTTPMethod } from "find-my-way";
 import createHttpError from "http-errors";
-import path from "path";
+import { posix } from "path";
 
 interface MiniRoute {
   method: HTTPMethod;
@@ -30,7 +30,7 @@ export class Router extends Wok {
         pino.warn(`[${route.method}] ${route.path} already mount`);
         return;
       }
-      let routePath = path.join(this.prefix, route.path);
+      let routePath = posix.join(this.prefix, route.path);
       this.#router.on(
         route.method,
         routePath,

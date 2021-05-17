@@ -8,5 +8,5 @@
     "uncapitalize",
     "yinz"
   ],
-  "jestrunner.jestPath": "/Users/yinz/Github/yinz13/fffff/node_modules/jest/bin/jest.js"
+  "jestrunner.jestPath": "./node_modules/jest/bin/jest.js"
 }

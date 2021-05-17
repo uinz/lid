@@ -9,6 +9,7 @@
     "ajv": "^8.4.0",
     "ajv-formats": "^2.1.0",
     "fast-json-stringify": "^2.7.3",
-    "find-my-way": "^4.1.0"
+    "find-my-way": "^4.1.0",
+    "http-errors": "^1.8.0"
   }
 }
