@@ -106,5 +106,8 @@ find more examples from [here](./packages/example)
 
 - onion model
 
+## TODO
+
 - [ ] OpenAPI
-- [ ] Performance
+- [ ] testing
+- [ ] example
