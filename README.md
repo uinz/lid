@@ -1,11 +1,11 @@
-# Lid
+# Lid ![image](https://user-images.githubusercontent.com/12208108/119231410-505ec580-bb53-11eb-93fa-57c07161f382.png)
 
 **Goal:** Simple, efficient and type-safe http framework
 
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![CI](https://github.com/uinz/lid/actions/workflows/main.yml/badge.svg?)](https://github.com/uinz/lid/actions/workflows/main.yml)
 
-<img style="text-align:center" src="./logo.png" width="240">
+
 
 ---
 
