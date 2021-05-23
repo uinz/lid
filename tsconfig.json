@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["jest-extended"]
+    "types": ["node", "jest-extended"]
   },
   "include": ["./packages/"]
 }
