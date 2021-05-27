@@ -65,7 +65,7 @@ export class Route<
     return this as any;
   }
 
-  #bodyValidate: Validate<TBody> = DEFAULT_VALIDATE; // (_: unknown): _ is TBody => true;
+  #bodyValidate: Validate<TBody> = DEFAULT_VALIDATE;
   body<S extends TSchema>(
     schema: S
   ): TRoute<TMethod, TPath, TParams, TQuery, Infer<S>, TResponse, TUsed | "body"> {
